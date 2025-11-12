@@ -26,3 +26,8 @@ This project demonstrates **fully automated deployment** of a static website usi
    terraform init
    terraform plan
    terraform apply
+
+
+   Author 
+
+   Sheikh Shadaab
