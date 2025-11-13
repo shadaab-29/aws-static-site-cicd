@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # MongoDB Database (Tier 3 - Data Layer)
+  mongodb:
+    image: mongo:7.0
+    container_name: meanstack-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: meanstack
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - meanstack-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/meanstack --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (Tier 2 - Application Layer)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: meanstack-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongodb:27017/meanstack
+      - FRONTEND_URL=http://localhost:3001
+      - API_VERSION=v1
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - meanstack-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend (Tier 1 - Presentation Layer)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: meanstack-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:3000/api
+    depends_on:
+      - backend
+    networks:
+      - meanstack-network
+
+networks:
+  meanstack-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local

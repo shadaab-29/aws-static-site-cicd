@@ -1,0 +1,8 @@
+# Terraform Variables Example
+# Copy this file to terraform.tfvars and update with your values
+
+region             = "us-east-1"
+instance_type      = "t2.medium"
+ami_id             = "ami-0453ec754f44f9a4a" # Amazon Linux 2023 (us-east-1)
+deploy_public_key  = "~/.ssh/id_rsa.pub"
+environment        = "development"
